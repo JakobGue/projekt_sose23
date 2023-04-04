@@ -1,5 +1,4 @@
 from nicegui import app, ui
-import numpy as np
 from datetime import datetime
 import serial
 
