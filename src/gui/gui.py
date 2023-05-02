@@ -66,10 +66,4 @@ def create() -> None:
 
             updater = ui.timer(0.1, update, active=False)
 
-        
-
-        
-
-                
-
     ui.run(title="Projekt4 POC", dark=False)
