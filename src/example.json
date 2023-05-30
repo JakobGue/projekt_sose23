@@ -1,0 +1,17 @@
+{"data":
+    [
+    {
+    "pot_id": 1,
+    "sensor_id": 0,
+    "measurement_type": "soil_moist",
+    "value": 123.0
+    },
+    {
+        "pot_id": 1,
+        "sensor_id": 1,
+        "measurement_type": "env_humid",
+        "value": 545.0
+        }
+
+]
+}
