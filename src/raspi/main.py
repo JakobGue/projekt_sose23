@@ -73,7 +73,8 @@ def subscribe(client: mqtt_client):
                     exceed_type = 'max'
                 elif measurement['value'] < min_max[f"min_{measurement['measurement_type']}"]:
                     exceed_type = 'min'
-                
+                else:
+                    continue
                 cursor.execute(f"""
                     INSERT INTO alertings (measurement_id, exceed_type)
                     VALUES ({mes_id}, '{exceed_type}')
