@@ -49,7 +49,7 @@ def connect_db():
 def subscribe(client: mqtt_client):
     def on_message(client, userdata, msg):
         data = json.loads(msg.payload.decode())['data']
-        # print(f"[{datetime.now()}] Received `{msg.payload.decode()}` from `{msg.topic}` topic")
+        print(f"[{datetime.now()}] Received `{msg.payload.decode()}` from `{msg.topic}` topic")
         connection = connect_db()
         try:
             cursor = connection.cursor()
