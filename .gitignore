@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+plant-database/
+
+
 # Distribution / packaging
 .Python
 build/
@@ -141,3 +144,4 @@ Credentials.h
 src/esp/smartplant/.vscode/launch.json
 src/esp/smartplant/.vscode/extensions.json
 src/esp/smartplant/.vscode/c_cpp_properties.json
+data/plant-database
