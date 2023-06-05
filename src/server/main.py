@@ -6,8 +6,11 @@ import pymysql
 from dotenv import load_dotenv
 from paho import mqtt
 from paho.mqtt import client as mqtt_client
+from fastapi import FastAPI
 
 load_dotenv()
+
+app = FastAPI()
 
 
 topic = os.environ.get('MQTT_TOPIC')
@@ -88,17 +91,22 @@ def subscribe(client: mqtt_client):
     client.on_message = on_message
 
 
-def run():
+# def run():
+#     client = connect_mqtt()
+#     subscribe(client)
+#     client.loop_forever()
+
+
+
+@app.on_event("startup")
+async def startup_event():
     client = connect_mqtt()
     subscribe(client)
-    client.loop_forever()
+    client.loop_start()
 
 
 
-if __name__ == '__main__':
-    while True:
-        try:
-            run()
-        except Exception as err:
-            print(err)
-            pass
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
