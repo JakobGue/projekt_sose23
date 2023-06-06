@@ -72,11 +72,13 @@ def subscribe(client: paho):
                     exceed_type = 'max'
                 elif measurement['value'] < min_max[f"min_{measurement['measurement_type']}"]:
                     exceed_type = 'min'
+
+                if exceed_type:
                 
-                cursor.execute(f"""
-                    INSERT INTO alertings (measurement_id, exceed_type)
-                    VALUES ({mes_id}, '{exceed_type}')
-                """)
+                    cursor.execute(f"""
+                        INSERT INTO alertings (measurement_id, exceed_type)
+                        VALUES ({mes_id}, '{exceed_type}')
+                    """)
                 
             
         finally:
