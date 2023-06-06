@@ -4,17 +4,13 @@ from datetime import datetime
 
 import pymysql
 from dotenv import load_dotenv
-from paho import mqtt
-from paho.mqtt import client as mqtt_client
-from fastapi import FastAPI
+import paho.mqtt.client as paho
+from paho import mqtt 
 
 load_dotenv()
 
-app = FastAPI()
-
 
 topic = os.environ.get('MQTT_TOPIC')
-
 
 def connect_mqtt():
     broker = os.environ.get('MQTT_BROKER')
@@ -22,13 +18,13 @@ def connect_mqtt():
     client_id = f'raspi-mqtt-{topic}'
     username = os.environ.get('MQTT_USERNAME')
     password = os.environ.get('MQTT_PASSWORD')
-    def on_connect(client, userdata, flags, rc):
+    def on_connect(client, userdata, flags, rc, properties=None):
         if rc == 0:
             print("Connected to MQTT Broker!")
         else:
             print("Failed to connect, return code %d\n", rc)
     # Set Connecting Client ID
-    client = mqtt_client.Client(client_id)
+    client = paho.Client(client_id=client_id, userdata=None, protocol=paho.MQTTv5)
     client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
     client.username_pw_set(username, password)
     client.on_connect = on_connect
@@ -46,7 +42,7 @@ def connect_db():
         cursorclass=pymysql.cursors.DictCursor)
     return connection
 
-def subscribe(client: mqtt_client):
+def subscribe(client: paho):
     def on_message(client, userdata, msg):
         data = json.loads(msg.payload.decode())['data']
         print(f"[{datetime.now()}] Received `{msg.payload.decode()}` from `{msg.topic}` topic")
@@ -76,8 +72,7 @@ def subscribe(client: mqtt_client):
                     exceed_type = 'max'
                 elif measurement['value'] < min_max[f"min_{measurement['measurement_type']}"]:
                     exceed_type = 'min'
-                else:
-                    continue
+                
                 cursor.execute(f"""
                     INSERT INTO alertings (measurement_id, exceed_type)
                     VALUES ({mes_id}, '{exceed_type}')
@@ -91,22 +86,17 @@ def subscribe(client: mqtt_client):
     client.on_message = on_message
 
 
-# def run():
-#     client = connect_mqtt()
-#     subscribe(client)
-#     client.loop_forever()
-
-
-
-@app.on_event("startup")
-async def startup_event():
+def run():
     client = connect_mqtt()
     subscribe(client)
-    client.loop_start()
+    client.loop_forever()
 
 
 
-
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
+if __name__ == '__main__':
+    while True:
+        try:
+            run()
+        except Exception as err:
+            print(err)
+            continue
