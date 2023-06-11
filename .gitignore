@@ -9,7 +9,7 @@ __pycache__/
 plant-database/
 
 
-# Distribution / packaging
+# Distribution / packagings
 .Python
 build/
 develop-eggs/
@@ -145,3 +145,4 @@ src/esp/smartplant/.vscode/launch.json
 src/esp/smartplant/.vscode/extensions.json
 src/esp/smartplant/.vscode/c_cpp_properties.json
 data/plant-database
+src/esp/smartplant/data/certs.ar

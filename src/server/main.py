@@ -2,10 +2,10 @@ import json
 import os
 from datetime import datetime
 
+import paho.mqtt.client as paho
 import pymysql
 from dotenv import load_dotenv
-import paho.mqtt.client as paho
-from paho import mqtt 
+from paho import mqtt
 
 load_dotenv()
 
@@ -79,6 +79,8 @@ def subscribe(client: paho):
                         INSERT INTO alertings (measurement_id, exceed_type)
                         VALUES ({mes_id}, '{exceed_type}')
                     """)
+
+                    client.publish(f"alertings/{measurement['pot_id']}", f"{measurement['measurement_type']}-{exceed_type}")
                 
             
         finally:
