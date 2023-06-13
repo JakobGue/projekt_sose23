@@ -45,14 +45,16 @@ def connect_db():
 def subscribe(client: paho):
     def on_message(client, userdata, msg):
         data = json.loads(msg.payload.decode())['data']
-        print(f"[{datetime.now()}] Received `{msg.payload.decode()}` from `{msg.topic}` topic")
+        timestamp = datetime.utcnow()
+        # print(f"[{datetime.utcnow()}] Received `{msg.payload.decode()}` from `{msg.topic}` topic")
         connection = connect_db()
         try:
             cursor = connection.cursor()
             for measurement in data:
+                exceed_type = None
                 query = f"""INSERT INTO measurement_data ("timestamp", pot_id, sensor_id, measurement_type, value) 
                         VALUES (
-                            '{datetime.now()}', 
+                            '{timestamp}', 
                             {measurement['pot_id']}, 
                             {measurement['sensor_id']}, 
                             '{measurement['measurement_type']}', 
@@ -65,6 +67,7 @@ def subscribe(client: paho):
                 query = f"""
                     SELECT min_{measurement['measurement_type']}, max_{measurement['measurement_type']} 
                     FROM plant_data JOIN pot_data ON plant_data.id = pot_data.plant_id
+                    WHERE pot_data.id = {measurement['pot_id']}
                 """
                 cursor.execute(query)
                 min_max = cursor.fetchone()
@@ -74,14 +77,13 @@ def subscribe(client: paho):
                     exceed_type = 'min'
 
                 if exceed_type:
+                    print(f"ALERTING: {measurement['measurement_type']} - {exceed_type}")
                 
                     cursor.execute(f"""
                         INSERT INTO alertings (measurement_id, exceed_type)
                         VALUES ({mes_id}, '{exceed_type}')
                     """)
-
-                    client.publish(f"alertings/{measurement['pot_id']}", f"{measurement['measurement_type']}-{exceed_type}")
-                
+                    client.publish(f"alertings_{measurement['pot_id']}", f"{measurement['measurement_type']}-{exceed_type}")
             
         finally:
             connection.close()
