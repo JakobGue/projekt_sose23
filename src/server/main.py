@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import time
 from datetime import datetime
 
@@ -8,9 +9,8 @@ import pymysql
 from dotenv import load_dotenv
 from paho import mqtt
 
+# load db and mqtt credentials from .env file
 load_dotenv()
-
-
 
 def connect_db():
     connection = pymysql.connect(
@@ -84,9 +84,14 @@ def on_message(client, userdata, msg):
     finally:
         connection.close()
 
+def on_disconnect(client, userdata, rc, properties=None):
+    print("Disconnected from MQTT Broker!")
+    print(rc, properties)
+    raise Exception("Disconnected from MQTT Broker!")
+
 
 def connect_mqtt():
-    client = paho.Client(client_id="Raspi", userdata=None, protocol=paho.MQTTv5)
+    client = paho.Client(client_id="Raspi"+ str(random.randint(0,10000)), userdata=None, protocol=paho.MQTTv5)
     client.on_connect = on_connect
 
     client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
@@ -97,18 +102,26 @@ def connect_mqtt():
     client.on_subscribe = on_subscribe
     client.on_message = on_message
     client.on_publish = on_publish
+    client.on_disconnect = on_disconnect
 
     
     client.subscribe(os.environ.get('MQTT_TOPIC'), qos=1)
+    print('returning client')
     return client
 
 
 
 if __name__ == '__main__':
+    # failsafe mechanism to always reconnect to mqtt broker
     while True:
         try:
             c = connect_mqtt()
             c.loop_forever()
         except Exception as err:
+            try:
+                c.disconnect()
+            except:
+                pass
             print(err)
+            time.sleep(5)
             continue

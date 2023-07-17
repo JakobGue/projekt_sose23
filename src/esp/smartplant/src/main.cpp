@@ -9,7 +9,6 @@
 #include <Adafruit_NeoPixel.h>
 #include <WiFiManager.h>  
 
-// Update these with values suitable for your network.
 const char* ssid = WIFI_SSID;
 const char* password =  WIFI_PW;
 const char* mqttServer = MQTT_BROKER;
@@ -27,9 +26,9 @@ const int ENV_SENSOR_PIN = D5;
 const int SOIL_SENSOR_PIN = A0;
 
 const int SOIL_MOISTURE_OFFSET = 300;
+const int MIN_SOIL = 705;
+const int MAX_SOIL = 289;
 
-
-// GLOBALS
 const int POT = POT_ID;
 
 int i = 0;
@@ -53,7 +52,7 @@ void setup_wifi()
 
 void callback(char* topic, byte* payload, unsigned int length) {
   String incommingMessage = "";
-  for (int i = 0; i < length; i++) incommingMessage+=(char)payload[i];
+  for (int i = 0; i < length; i++) incommingMessage += (char)payload[i];
   String type = incommingMessage.substring(0, incommingMessage.indexOf("-"));
   String exceed = incommingMessage.substring(incommingMessage.indexOf("-")+1, incommingMessage.length());
   Serial.println(type);
@@ -135,14 +134,14 @@ void loop()
     reconnect();
   }
   client.loop();
-
   if (i == 60) {
     pixels.fill(pixels.Color(0, 50, 0));
     pixels.show();
     float light_lux = GY302.readLightLevel();
     float temp = dht.readTemperature();
     float env_humid = dht.readHumidity();
-    float soil_moist =  (1 - (analogRead(SOIL_SENSOR_PIN)-SOIL_MOISTURE_OFFSET)/(1023-SOIL_MOISTURE_OFFSET)) * 100;
+    Serial.println("soil_raw: " + String(analogRead(SOIL_SENSOR_PIN)));
+    float soil_moist = map(analogRead(SOIL_SENSOR_PIN),MIN_SOIL,MAX_SOIL, 0, 100);
 
     DynamicJsonDocument doc(256);
 
@@ -183,7 +182,7 @@ void loop()
     client.publish(mqtt_topic, buffer);
     i = 0;
   }
-
+  // delaying whole 30s at once results in connection loss, therefore delay 500ms 60 times
   delay(500);
   i++;
 
